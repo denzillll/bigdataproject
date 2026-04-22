@@ -1,0 +1,21 @@
+
+# Unified dependency file for the Big Data Technologies project.
+# Covers BOTH Assignment 1 (Postgres ingestion) and Assignment 2 (dbt on Databricks).
+#
+# Target Python: 3.11 (3.12 also works). Do NOT use 3.14.
+
+# Assignment 1: data download + Postgres ingestion
+pandas>=2.1,<2.3
+requests>=2.32,<3
+psycopg2-binary>=2.9,<3
+sqlalchemy>=2.0,<3
+
+# Assignment 2: dbt on Databricks
+# (dbt-databricks pins databricks-sdk and databricks-sql-connector internally)
+dbt-core>=1.9,<1.10
+dbt-databricks>=1.9,<1.10
+
+# Developer convenience
+ipykernel>=6.29
+jupyter>=1.0
+python-dotenv>=1.0

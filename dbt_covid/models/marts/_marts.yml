@@ -1,0 +1,133 @@
+version: 2
+
+models:
+  # ──────────────────────────────────────────────────────────────
+  # DIMENSIONS
+  # ──────────────────────────────────────────────────────────────
+  - name: dim_country
+    description: >
+      One row per country with stable attributes (continent, population,
+      GDP per capita, median age), income bucket, and peak metrics.
+      Joins to facts via country_sk.
+    columns:
+      - name: country_sk
+        description: MD5 surrogate key derived from country_name.
+        tests:
+          - unique
+          - not_null
+      - name: country_name
+        tests:
+          - unique
+          - not_null
+      - name: continent
+        tests:
+          - not_null
+      - name: income_bucket
+        description: GDP-per-capita bucket (Low / Lower-middle / Upper-middle / High / Unknown).
+        tests:
+          - accepted_values:
+              values: ['Low income','Lower-middle','Upper-middle','High income','Unknown']
+      - name: case_fatality_rate_pct
+        description: Peak deaths over peak cases, as a percentage.
+
+  - name: dim_date
+    description: >
+      Date spine from 2020-01-01 to 2026-12-31, one row per day.
+      Lets BI tools fill in gaps and join by calendar attributes.
+    columns:
+      - name: date_day
+        tests:
+          - unique
+          - not_null
+      - name: year_month
+        description: "'yyyy-MM' string, useful for monthly rollups."
+
+  # ──────────────────────────────────────────────────────────────
+  # FACT TABLES
+  # ──────────────────────────────────────────────────────────────
+  - name: fct_country_daily
+    description: >
+      Primary country-level daily fact. BI-tool friendly: join to dim_country
+      via country_sk and to dim_date via report_date.
+    columns:
+      - name: country_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_country')
+              field: country_sk
+      - name: report_date
+        tests:
+          - not_null
+      - name: new_cases
+      - name: new_deaths
+      - name: running_cfr_pct
+
+  - name: fct_continent_summary
+    description: >
+      [Q2] Case fatality rate and vaccination coverage by continent.
+      One row per continent.
+    columns:
+      - name: continent
+        tests:
+          - unique
+          - not_null
+      - name: continent_cfr_pct
+        description: Total deaths over total cases across countries in the continent.
+
+  - name: fct_vaccination_impact
+    description: >
+      [Q1] Daily deaths-per-million for each country before and after it
+      crossed the 50% first-dose vaccination threshold. The delta between
+      pre_daily_deaths_per_million and post_daily_deaths_per_million is
+      the core headline number for the dashboard.
+    columns:
+      - name: country_sk
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_country')
+              field: country_sk
+      - name: pre_daily_deaths_per_million
+      - name: post_daily_deaths_per_million
+
+  - name: fct_gdp_outcomes
+    description: >
+      [Q3] Aggregated pandemic outcomes grouped by GDP-per-capita income
+      bucket. One row per income bucket.
+    columns:
+      - name: income_bucket
+        tests:
+          - unique
+          - not_null
+      - name: income_bucket_cfr_pct
+
+  - name: fct_us_state_severity
+    description: >
+      [Q4] Per-US-state peak strain metrics (hospitalised, ICU, ventilator,
+      positivity rate, deaths). Data ends 2021-03-07 where the source feed
+      stopped reporting.
+    columns:
+      - name: state_code
+        tests:
+          - unique
+          - not_null
+      - name: peak_currently_hospitalized
+      - name: peak_currently_in_icu
+
+  - name: fct_wave_peaks
+    description: >
+      [Q5] Per-country peak-wave month, defined as the date when the 7-day
+      rolling average of new cases was at its maximum. Used for a wave-
+      timing heatmap in the dashboard.
+    columns:
+      - name: country_sk
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('dim_country')
+              field: country_sk
+      - name: peak_date
+      - name: peak_year_month

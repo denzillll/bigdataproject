@@ -1,0 +1,41 @@
+name: 'dbt_covid'
+version: '1.0.0'
+config-version: 2
+
+# Profile name in profiles.yml
+profile: 'dbt_covid'
+
+# Folder conventions
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Materialisation strategy by layer.
+# - staging -> views (cheap, always reflect source)
+# - intermediate -> ephemeral (inlined as CTEs, no physical table)
+# - marts -> tables on Delta (queryable, governed by Unity Catalog)
+models:
+  dbt_covid:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: ephemeral
+    marts:
+      +materialized: table
+      +schema: marts
+      +file_format: delta
+
+# Variables used across models (override via --vars on run)
+vars:
+  # Earliest date we trust in the data
+  min_trusted_date: '2020-01-01'
+  # Minimum total cases for a country to be included in fatality-rate rankings
+  min_cases_for_fatality_rank: 100000

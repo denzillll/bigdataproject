@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: stg_global_epidemiology
+    description: >
+      Cleaned country-level daily COVID-19 data. Aggregate rows (World,
+      High income, EU, etc.) are removed, negative values clipped to zero,
+      and dates before {{ var('min_trusted_date') }} filtered out.
+    columns:
+      - name: source_id
+        description: Surrogate id carried over from PostgreSQL.
+        tests:
+          - unique
+          - not_null
+      - name: country_name
+        description: Country or territory name.
+        tests:
+          - not_null
+      - name: continent
+        description: Continent. Non-null after staging filter.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Africa','Asia','Europe','North America','Oceania','South America']
+      - name: report_date
+        description: Reporting date.
+        tests:
+          - not_null
+      - name: new_cases
+        description: New confirmed cases that day. Clipped to >= 0.
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: new_deaths
+        description: New confirmed deaths that day. Clipped to >= 0.
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: vaccinated_pct
+        description: Percentage of population with at least one vaccine dose.
+      - name: _ingested_at
+        description: UTC timestamp the row landed in Bronze.
+
+  - name: stg_us_state_tracking
+    description: Cleaned US state-level daily tracking data.
+    columns:
+      - name: source_id
+        tests:
+          - unique
+          - not_null
+      - name: state_code
+        description: Two-letter US state/territory code, uppercased.
+        tests:
+          - not_null
+      - name: report_date
+        tests:
+          - not_null
+      - name: positive_test_rate
+        description: Rolling 7-day positive test rate. Range 0.0-1.0.
+
+  - name: stg_country_summary
+    description: >
+      OLTP-side country aggregate. Kept as a reference for cross-checking
+      dbt-computed aggregates against the source-of-truth.
+    columns:
+      - name: country_name
+        tests:
+          - unique
+          - not_null
+      - name: case_fatality_rate_pct

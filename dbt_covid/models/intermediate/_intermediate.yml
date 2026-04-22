@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: int_country_daily
+    description: >
+      Country-level daily grain, enriched with 7-day rolling averages,
+      a running case-fatality-rate, and a year_month bucket. Materialised
+      as ephemeral so it never creates a physical table - it only exists
+      when compiled into downstream marts.
+    columns:
+      - name: country_name
+        tests:
+          - not_null
+      - name: report_date
+        tests:
+          - not_null
+      - name: new_cases_7d_avg
+        description: 7-day rolling average of new_cases.
+      - name: new_deaths_7d_avg
+        description: 7-day rolling average of new_deaths.
+      - name: running_cfr_pct
+        description: Running case fatality rate (total_deaths/total_cases * 100).
+
+  - name: int_us_state_daily
+    description: US state daily grain with net-new values derived from cumulative columns.
+    columns:
+      - name: state_code
+        tests:
+          - not_null
+      - name: report_date
+        tests:
+          - not_null

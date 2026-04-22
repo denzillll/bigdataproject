@@ -1,0 +1,7 @@
+packages:
+  # dbt_utils: generic tests (surrogate_key, expression_is_true, etc.)
+  - package: dbt-labs/dbt_utils
+    version: 1.3.0
+  # codegen: generate model YAML/SQL from sources to speed up authoring
+  - package: dbt-labs/codegen
+    version: 0.12.1
