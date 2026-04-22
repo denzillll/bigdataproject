@@ -1,6 +1,35 @@
-keys/
-keys/
+# === Secrets ===
+.env
+*.env.local
+
+# === Python ===
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.ipynb_checkpoints/
+
+# === dbt ===
+dbt_covid/target/
+dbt_covid/dbt_packages/
+dbt_covid/logs/
+dbt_covid/.user.yml
+
+# === Raw data (too large for GitHub) ===
+data/raw/
+data/interim/
+data/processed/
+
+# === macOS ===
 .DS_Store
-**/.DS_Store
-data/raw/
-data/raw/
+
+# === Editor / IDE ===
+.vscode/
+.idea/
+*.swp
+
+# === Logs ===
+*.log
+logs/

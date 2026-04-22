@@ -20,7 +20,9 @@ clean-targets:
 # Materialisation strategy by layer.
 # - staging -> views (cheap, always reflect source)
 # - intermediate -> ephemeral (inlined as CTEs, no physical table)
-# - marts -> tables on Delta (queryable, governed by Unity Catalog)
+# - marts -> native BigQuery tables (queryable, surfaced via BQ Data
+#   Lineage and consumed downstream by Databricks via Lakehouse
+#   Federation)
 models:
   dbt_covid:
     staging:
@@ -31,7 +33,6 @@ models:
     marts:
       +materialized: table
       +schema: marts
-      +file_format: delta
 
 # Variables used across models (override via --vars on run)
 vars:

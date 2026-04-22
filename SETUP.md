@@ -1,179 +1,104 @@
-# Environment setup — Assignments 1 + 2
+# Setup Guide
 
-Single Python virtual environment that covers both assignments.
+End-to-end setup for the COVID-19 Big Data pipeline. Target: reproduce
+`dbt debug` passing against BigQuery on a fresh machine.
 
----
-
-## 1. Make sure you have Python 3.11
-
-The existing `.venv/` uses Python 3.14, which dbt doesn't support yet.
-Replace it with 3.11 (recommended) or 3.12.
-
-**Check what you have:**
+## 1. Clone the repo
 ```bash
-python3.11 --version   # should print "Python 3.11.x"
+git clone https://github.com/denzillll/bigdataproject.git
+cd bigdataproject
 ```
 
-**If 3.11 is missing, install it:**
-
-*macOS (Homebrew):*
+## 2. Install Python 3.11
+dbt-core 1.9 requires Python 3.11 (3.14 is too new for the BigQuery adapter).
 ```bash
+# macOS
 brew install python@3.11
+python3.11 --version   # should print Python 3.11.x
 ```
 
-*macOS (pyenv — recommended if you already use pyenv):*
+## 3. Create a virtual environment
 ```bash
-pyenv install 3.11.9
-pyenv local 3.11.9
-```
-
-*Windows:*
-Download from https://www.python.org/downloads/windows/ and check
-"Add python.exe to PATH" during install.
-
-*Linux:*
-```bash
-sudo apt install python3.11 python3.11-venv
-```
-
----
-
-## 2. Replace the venv
-
-From the project root (`bigdataproject/`):
-
-```bash
-# Remove the old 3.14-based venv
-rm -rf .venv
-
-# Create a new 3.11-based venv
 python3.11 -m venv .venv
-
-# Activate it
-source .venv/bin/activate          # macOS / Linux
-# .venv\Scripts\activate           # Windows PowerShell
-
-# Install everything
+source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-This installs:
-- **Assignment 1 stack**: pandas, requests, psycopg2-binary, sqlalchemy
-- **Assignment 2 stack**: dbt-core, dbt-databricks, databricks-sql-connector
-- **Dev tools**: jupyter, python-dotenv
+## 4. Get a BigQuery service account key
+1. Go to https://console.cloud.google.com → select project `covid-bigquery-494113`.
+2. IAM & Admin → Service Accounts → `covid-pipeline`.
+3. Keys → Add Key → Create new key → JSON → download.
+4. Save it somewhere stable and lock down permissions:
+```bash
+mkdir -p ~/.gcp
+mv ~/Downloads/covid-bigquery-494113-*.json ~/.gcp/covid-bigquery-key.json
+chmod 600 ~/.gcp/covid-bigquery-key.json
+```
+**Never commit this file.** `.gitignore` excludes the `.gcp/` path pattern,
+but keep the key outside the repo to be safe.
 
----
-
-## 3. Set up credentials
-
-Copy the template and fill in your real values:
+## 5. Configure environment variables
+Copy `.env.example` to `.env` and fill in your keyfile path:
 ```bash
 cp .env.example .env
-# edit .env and paste your DBT_DATABRICKS_HOST / HTTP_PATH / TOKEN
+# then edit .env
 ```
 
-`.env` is git-ignored — it will never be committed.
-
----
-
-## 4. Load env vars into your shell session
-
-Every time you open a new terminal, run:
+Also add to `~/.zshrc` (or `~/.bashrc`):
 ```bash
-source .venv/bin/activate
-set -a; source .env; set +a
+export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp/covid-bigquery-key.json"
+export BQ_PROJECT_ID="covid-bigquery-494113"
 ```
+Reload: `source ~/.zshrc`.
 
-Or add this alias to your `~/.zshrc`:
+## 6. Verify the BigQuery connection
 ```bash
-alias bdt='cd ~/path/to/bigdataproject && source .venv/bin/activate && set -a && source .env && set +a'
+python -c "from google.cloud import bigquery; c = bigquery.Client(); print('Connected:', c.project)"
 ```
+Expected: `Connected: covid-bigquery-494113`.
 
-Then just type `bdt` to enter the project environment.
-
----
-
-## 5. Configure dbt
-
-Copy the dbt profile into the global dbt config folder (dbt always reads
-`~/.dbt/profiles.yml`, not the project folder):
-```bash
-mkdir -p ~/.dbt
-cp dbt_covid/profiles.yml ~/.dbt/profiles.yml
-```
-
-The profile references the `DBT_DATABRICKS_*` env vars you set in step 4,
-so no secrets are hardcoded.
-
----
-
-## 6. Verify everything works
-
+## 7. Verify the dbt connection
 ```bash
 cd dbt_covid
-dbt deps                           # install dbt packages (dbt_utils, codegen)
-dbt debug                          # verifies connection + profile
+dbt deps
+dbt debug
 ```
+Expected: `All checks passed!`.
 
-You should see `All checks passed!` at the bottom. If not, the output will
-tell you which piece (host / http_path / token) failed.
+## 8. (Optional) Load sample data into BigQuery Bronze
+The raw CSVs are gitignored (too large for GitHub). Either download them
+fresh (see `scripts/01_download_data.py`) or use the small samples in
+`data/samples/` for a quick smoke test. The ingestion script
+`scripts/03_upload_to_bigquery.py` writes them into
+`covid-bigquery-494113.bronze.*`.
 
----
-
-## 7. Smoke-test with one row
-
-Before wiring up Fivetran/Airbyte, create the schemas and a single row so
-`dbt build` has something to transform. In the Databricks SQL Editor:
-
-```sql
-CREATE SCHEMA IF NOT EXISTS workspace.bronze;
-CREATE SCHEMA IF NOT EXISTS workspace.staging;
-CREATE SCHEMA IF NOT EXISTS workspace.marts;
-
-CREATE TABLE IF NOT EXISTS workspace.bronze.covid__global_epidemiology (
-    id BIGINT, location STRING, continent STRING, date DATE,
-    new_cases INT, new_deaths INT,
-    total_cases BIGINT, total_deaths BIGINT,
-    new_cases_per_million DOUBLE, new_deaths_per_million DOUBLE,
-    total_vaccinations BIGINT, people_vaccinated_per_hundred DOUBLE,
-    population BIGINT, gdp_per_capita DOUBLE, median_age DOUBLE,
-    _ingested_at TIMESTAMP);
-
-CREATE TABLE IF NOT EXISTS workspace.bronze.covid__us_state_tracking (
-    id BIGINT, state STRING, date DATE,
-    positive INT, negative INT,
-    hospitalized_currently INT, hospitalized_cumulative INT,
-    in_icu_currently INT, on_ventilator_currently INT,
-    death INT, total_test_results INT, positive_rate DOUBLE);
-
-CREATE TABLE IF NOT EXISTS workspace.bronze.covid__country_summary (
-    location STRING, continent STRING,
-    population BIGINT, gdp_per_capita DOUBLE, median_age DOUBLE,
-    peak_total_cases BIGINT, peak_total_deaths BIGINT,
-    case_fatality_rate_pct DOUBLE, max_vaccination_pct DOUBLE,
-    days_with_data BIGINT,
-    first_reported_date DATE, last_reported_date DATE);
-
--- One seed row so `dbt build` completes end-to-end
-INSERT INTO workspace.bronze.covid__global_epidemiology VALUES
-  (1, 'Spain', 'Europe', DATE'2021-07-01', 5000, 20, 3900000, 81000,
-   106.1, 0.4, 25000000, 55.0, 47000000, 38400, 45.5, current_timestamp());
-```
-
-Then locally:
+## 9. Run the full pipeline
 ```bash
 cd dbt_covid
-dbt build
-dbt docs generate
-dbt docs serve     # opens http://localhost:8080
+dbt build         # runs staging -> intermediate -> marts + all tests
+dbt docs generate # builds manifest + catalog
+dbt docs serve    # opens lineage UI at http://localhost:8080
 ```
 
----
+## Troubleshooting
 
-## Full bulk load (later step)
+**`NoneType has no attribute 'close'` on `dbt debug`**
+→ `GOOGLE_APPLICATION_CREDENTIALS` either isn't set or points at a missing
+file. Run `echo $GOOGLE_APPLICATION_CREDENTIALS` and `ls -la` that path.
 
-Once `dbt debug` and the smoke test pass, we'll write a small Python
-script that uses the databricks-sdk to bulk-copy the Postgres COVID
-tables into `workspace.bronze.*`. That replaces Fivetran/Airbyte for
-Free Edition where third-party CDC tools get expensive.
+**SSL `certificate verify failed` on macOS**
+→ venv's certifi bundle is stale. Fix:
+```bash
+pip install --upgrade certifi
+export SSL_CERT_FILE=$(python -c "import certifi; print(certifi.where())")
+export REQUESTS_CA_BUNDLE=$SSL_CERT_FILE
+```
+Put those two exports in `~/.zshrc` to persist.
+
+**`dbt deps` fails to resolve packages**
+→ Delete `dbt_packages/` and rerun `dbt deps`.
+
+**BigQuery `PermissionDenied`**
+→ The service account needs `BigQuery Data Editor` + `BigQuery Job User`
+roles. Grant them in GCP Console → IAM.

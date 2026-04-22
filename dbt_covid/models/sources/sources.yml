@@ -3,17 +3,18 @@ version: 2
 sources:
   # ──────────────────────────────────────────────────────────────
   # Bronze layer — raw replicas of the PostgreSQL OLTP tables from
-  # Assignment 1, ingested into Databricks via Fivetran / Airbyte /
-  # Debezium (whichever you pick in the architecture diagram).
-  # Schema on Databricks: covid_analytics.bronze
+  # Assignment 1, ingested into BigQuery via a Python loader script
+  # (scripts/03_upload_to_bigquery.py) or, in a production variant,
+  # Fivetran / Airbyte / Debezium CDC.
+  # Location on BigQuery: <project>.bronze.*
   # ──────────────────────────────────────────────────────────────
   - name: bronze
     description: >
       Raw landing zone for the COVID-19 OLTP tables. Tables here are
       append-only replicas of PostgreSQL (`covid` schema) and should
-      never be modified directly by analytics code. Ingestion is
-      expected to add an `_ingested_at` timestamp to every row.
-    database: workspace
+      never be modified directly by analytics code. Ingestion adds an
+      `_ingested_at` UTC timestamp and a surrogate `id` to every row.
+    database: "{{ env_var('BQ_PROJECT_ID', 'covid-bigquery-494113') }}"
     schema: bronze
 
     # Freshness rules tell dbt to fail the build if Bronze is stale.
@@ -32,7 +33,7 @@ sources:
           `covid.global_epidemiology`. ~525k rows.
         columns:
           - name: id
-            description: Surrogate primary key from PostgreSQL.
+            description: Surrogate primary key assigned during ingestion.
             tests:
               - unique
               - not_null
