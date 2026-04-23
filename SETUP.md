@@ -11,10 +11,13 @@ cd bigdataproject
 
 ## 2. Install Python 3.11
 dbt-core 1.9 requires Python 3.11 (3.14 is too new for the BigQuery adapter).
+The repo includes a `.python-version` file — if you use pyenv it will auto-select 3.11.9.
 ```bash
-# macOS
-brew install python@3.11
-python3.11 --version   # should print Python 3.11.x
+# macOS (pyenv — recommended)
+brew install pyenv
+pyenv install 3.11.9
+pyenv local 3.11.9      # sets .python-version — already committed in the repo
+python --version        # should print Python 3.11.9
 ```
 
 ## 3. Create a virtual environment
