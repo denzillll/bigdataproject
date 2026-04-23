@@ -6,7 +6,6 @@ with source as (
 
 cleaned as (
     select
-        id                                      as source_id,
         upper(state)                            as state_code,
         cast(date as date)                      as report_date,
 

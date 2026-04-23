@@ -15,7 +15,7 @@ with_rolling as (
         country_name,
         continent,
         report_date,
-        date_format(report_date, 'yyyy-MM')            as year_month,
+        format_date('%Y-%m', report_date) as year_month,
 
         new_cases,
         new_deaths,

@@ -8,7 +8,7 @@ with_derived as (
     select
         state_code,
         report_date,
-        date_format(report_date, 'yyyy-MM')            as year_month,
+        format_date('%Y-%m', report_date) as year_month,
 
         cumulative_positive_tests,
         cumulative_deaths,

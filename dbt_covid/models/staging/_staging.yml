@@ -7,11 +7,6 @@ models:
       High income, EU, etc.) are removed, negative values clipped to zero,
       and dates before {{ var('min_trusted_date') }} filtered out.
     columns:
-      - name: source_id
-        description: Surrogate id carried over from PostgreSQL.
-        tests:
-          - unique
-          - not_null
       - name: country_name
         description: Country or territory name.
         tests:
@@ -44,10 +39,6 @@ models:
   - name: stg_us_state_tracking
     description: Cleaned US state-level daily tracking data.
     columns:
-      - name: source_id
-        tests:
-          - unique
-          - not_null
       - name: state_code
         description: Two-letter US state/territory code, uppercased.
         tests:

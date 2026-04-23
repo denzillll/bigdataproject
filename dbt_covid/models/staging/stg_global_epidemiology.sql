@@ -14,7 +14,6 @@ with source as (
 
 cleaned as (
     select
-        id                                      as source_id,
         location                                as country_name,
         continent,
         cast(date as date)                      as report_date,
@@ -35,7 +34,6 @@ cleaned as (
         gdp_per_capita,
         median_age,
 
-        _ingested_at
     from source
     where continent is not null                         -- drop aggregate rows
       and date >= cast('{{ var("min_trusted_date") }}' as date)
