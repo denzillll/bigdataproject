@@ -33,8 +33,6 @@ models:
               expression: ">= 0"
       - name: vaccinated_pct
         description: Percentage of population with at least one vaccine dose.
-      - name: _ingested_at
-        description: UTC timestamp the row landed in Bronze.
 
   - name: stg_us_state_tracking
     description: Cleaned US state-level daily tracking data.

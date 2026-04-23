@@ -1,5 +1,3 @@
--- Staging layer for us_state_tracking.
-
 with source as (
     select * from {{ source('bronze', 'us_state_tracking') }}
 ),
@@ -18,8 +16,9 @@ cleaned as (
         coalesce(death, 0)                      as cumulative_deaths,
         total_test_results                      as cumulative_total_tests,
         positive_rate                           as positive_test_rate
+
     from source
-    where date >= cast('{{ var("min_trusted_date") }}' as date)
+    where date >= cast('2020-01-01' as date)
 )
 
 select * from cleaned

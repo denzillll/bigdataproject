@@ -1,8 +1,3 @@
--- Q2: Case fatality rate comparison across continents.
---
--- One row per continent. Uses dim_country peaks rather than summing the
--- daily fact, because totals are already cumulative at the country level.
-
 with country as (
     select * from {{ ref('dim_country') }}
     where continent is not null
@@ -11,12 +6,12 @@ with country as (
 by_continent as (
     select
         continent,
-        count(*)                                            as num_countries,
-        sum(population)                                     as total_population,
-        sum(peak_total_cases)                               as total_cases,
-        sum(peak_total_deaths)                              as total_deaths,
-        avg(peak_vaccinated_pct)                            as avg_peak_vaccinated_pct,
-        avg(gdp_per_capita)                                 as avg_gdp_per_capita
+        count(*)                        as num_countries,
+        sum(population)                 as total_population,
+        sum(peak_total_cases)           as total_cases,
+        sum(peak_total_deaths)          as total_deaths,
+        avg(peak_vaccinated_pct)        as avg_peak_vaccinated_pct,
+        avg(gdp_per_capita)             as avg_gdp_per_capita
     from country
     group by continent
 )
@@ -30,7 +25,7 @@ select
     case
         when total_cases > 0
             then round(total_deaths * 100.0 / total_cases, 4)
-    end                                                     as continent_cfr_pct,
+    end                                 as continent_cfr_pct,
     avg_peak_vaccinated_pct,
     avg_gdp_per_capita
 from by_continent

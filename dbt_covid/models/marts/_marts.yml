@@ -131,3 +131,25 @@ models:
               field: country_sk
       - name: peak_date
       - name: peak_year_month
+
+  - name: fct_map_spread
+    description: >
+      Country-level daily table optimised for animated map visualisations.
+      Includes raw and 7-day smoothed new cases per million for colouring
+      a choropleth map over time. Used by scripts/map_wave_animation.py.
+    columns:
+      - name: country_name
+        tests:
+          - not_null
+      - name: continent
+        tests:
+          - not_null
+      - name: report_date
+        tests:
+          - not_null
+      - name: new_cases_per_million
+        description: Raw daily new cases per million population.
+      - name: new_cases_7d_avg_per_million
+        description: 7-day rolling average of new cases per million. Used as map colour metric.
+      - name: new_deaths_per_million
+        description: Raw daily new deaths per million population.
