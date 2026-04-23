@@ -153,3 +153,50 @@ models:
         description: 7-day rolling average of new cases per million. Used as map colour metric.
       - name: new_deaths_per_million
         description: Raw daily new deaths per million population.
+
+  - name: fct_country_vulnerability_index
+    description: >
+      Composite pandemic vulnerability score per country based on three structural
+      risk factors: median age, GDP per capita, and vaccination reach. Useful for
+      identifying which countries need priority support before the next outbreak.
+    columns:
+      - name: country_name
+        tests:
+          - not_null
+          - unique
+      - name: vulnerability_score
+        description: Weighted composite score 0-100. Higher = more vulnerable.
+      - name: vulnerability_tier
+        tests:
+          - accepted_values:
+              values: ['Low', 'Medium', 'High', 'Critical']
+
+  - name: fct_wave_response_speed
+    description: >
+      Days from first sustained spread to peak per country, and whether faster-
+      peaking countries had better or worse outcomes. Useful for evaluating whether
+      early intervention reduced peak severity.
+    columns:
+      - name: country_name
+        tests:
+          - not_null
+          - unique
+      - name: days_first_to_peak
+        description: Days between first sustained spread (7d avg > 5) and the overall peak.
+
+  - name: fct_early_warning_signals
+    description: >
+      Growth multiplier and daily growth rate in each country's first 14 days of
+      sustained spread, compared against eventual peak severity and CFR. Identifies
+      what early growth rate should trigger escalated pandemic response.
+    columns:
+      - name: country_name
+        tests:
+          - not_null
+          - unique
+      - name: growth_multiplier_14d
+        description: How many times cases multiplied in the first 14 days of spread.
+      - name: initial_spread_tier
+        tests:
+          - accepted_values:
+              values: ['Explosive (≥10x in 14 days)', 'Rapid (5-10x in 14 days)', 'Moderate (2-5x in 14 days)', 'Slow (< 2x in 14 days)']
