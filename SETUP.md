@@ -76,12 +76,13 @@ dbt debug
 Expected: `All checks passed!`.
 
 ## 9. (Optional) Load data into BigQuery Bronze
-The raw CSVs are gitignored (too large for GitHub). Download them fresh:
+The raw CSVs are gitignored (too large for GitHub). Run the full pipeline:
 ```bash
-python scripts/01_download_data.py
-python scripts/03_postgres_to_bigquery.py
+python scripts/01_download_data.py        # download CSV + JSON to data/raw/
+python scripts/02_ingest_to_postgres.py   # load into PostgreSQL
+python scripts/03_postgres_to_bigquery.py # migrate to BigQuery covid_raw dataset
 ```
-This writes raw tables into `covid-bigquery-494113.bronze.*`.
+This writes raw tables into `covid-bigquery-494113.covid_raw`.
 
 ## 10. Run the full pipeline
 ```bash
