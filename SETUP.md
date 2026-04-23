@@ -19,8 +19,8 @@ python3.11 --version   # should print Python 3.11.x
 
 ## 3. Create a virtual environment
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
+python3.11 -m venv venv
+source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
@@ -29,14 +29,11 @@ pip install -r requirements.txt
 1. Go to https://console.cloud.google.com → select project `covid-bigquery-494113`.
 2. IAM & Admin → Service Accounts → `covid-pipeline`.
 3. Keys → Add Key → Create new key → JSON → download.
-4. Save it somewhere stable and lock down permissions:
+4. Move it into the `keys/` folder inside the repo (gitignored):
 ```bash
-mkdir -p ~/.gcp
-mv ~/Downloads/covid-bigquery-494113-*.json ~/.gcp/covid-bigquery-key.json
-chmod 600 ~/.gcp/covid-bigquery-key.json
+mv ~/Downloads/covid-bigquery-494113-*.json keys/
 ```
-**Never commit this file.** `.gitignore` excludes the `.gcp/` path pattern,
-but keep the key outside the repo to be safe.
+**Never commit this file.** The `keys/` folder is in `.gitignore`.
 
 ## 5. Configure environment variables
 Copy `.env.example` to `.env` and fill in your keyfile path:
@@ -45,12 +42,7 @@ cp .env.example .env
 # then edit .env
 ```
 
-Also add to `~/.zshrc` (or `~/.bashrc`):
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp/covid-bigquery-key.json"
-export BQ_PROJECT_ID="covid-bigquery-494113"
-```
-Reload: `source ~/.zshrc`.
+Update `GOOGLE_APPLICATION_CREDENTIALS` in `.env` to point at your key file.
 
 ## 6. Verify the BigQuery connection
 ```bash
@@ -66,12 +58,13 @@ dbt debug
 ```
 Expected: `All checks passed!`.
 
-## 8. (Optional) Load sample data into BigQuery Bronze
-The raw CSVs are gitignored (too large for GitHub). Either download them
-fresh (see `scripts/01_download_data.py`) or use the small samples in
-`data/samples/` for a quick smoke test. The ingestion script
-`scripts/03_upload_to_bigquery.py` writes them into
-`covid-bigquery-494113.bronze.*`.
+## 8. (Optional) Load data into BigQuery Bronze
+The raw CSVs are gitignored (too large for GitHub). Download them fresh:
+```bash
+python scripts/01_download_data.py
+python scripts/03_postgres_to_bigquery.py
+```
+This writes raw tables into `covid-bigquery-494113.bronze.*`.
 
 ## 9. Run the full pipeline
 ```bash

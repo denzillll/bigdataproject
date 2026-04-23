@@ -1,15 +1,21 @@
-Welcome to your new dbt project!
+# dbt_covid
 
-### Using the starter project
+dbt project for the COVID-19 Big Data pipeline.
 
-Try running the following commands:
-- dbt run
-- dbt test
+## Models
 
+| Layer | Materialisation | Purpose |
+|---|---|---|
+| `staging/` | view | Clean and type-cast raw BigQuery bronze tables |
+| `intermediate/` | ephemeral | Derive rolling averages, CFR, year-month grain |
+| `marts/` | table | Final analytics tables consumed by Looker Studio |
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+## Commands
+
+```bash
+dbt deps          # install packages (dbt_utils)
+dbt debug         # verify BigQuery connection
+dbt build         # run all models + tests
+dbt docs generate # build lineage docs
+dbt docs serve    # open lineage UI at http://localhost:8080
+```

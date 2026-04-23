@@ -1,12 +1,20 @@
+# Data pipeline
 pandas>=2.1,<2.3
 requests>=2.32,<3
-psycopg2-binary>=2.9,<3
-sqlalchemy>=2.0,<3
-dbt-core>=1.9,<1.10
-dbt-bigquery>=1.9,<1.10
+python-dotenv>=1.0
+
+# BigQuery
 google-cloud-bigquery>=3.25,<4
 pyarrow>=16,<18
 db-dtypes>=1.2,<2
-ipykernel>=6.29
-jupyter>=1.0
-python-dotenv>=1.0
+
+# dbt
+dbt-core>=1.9,<1.10
+dbt-bigquery>=1.9,<1.10
+
+# Visualisation
+plotly>=5.0
+
+# Assignment 1 — PostgreSQL ingestion only
+psycopg2-binary>=2.9,<3
+sqlalchemy>=2.0,<3
