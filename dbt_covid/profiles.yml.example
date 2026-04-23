@@ -1,0 +1,11 @@
+dbt_covid:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: covid-bigquery-494113
+      dataset: covid_transform
+      threads: 4
+      keyfile: /absolute/path/to/your/keys/covid-bigquery-494113-xxxx.json
+      location: EU

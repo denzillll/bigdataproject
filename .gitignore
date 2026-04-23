@@ -34,3 +34,6 @@ data/processed/
 # === Logs ===
 *.log
 logs/
+
+# === Generated files ===
+docs/*.html

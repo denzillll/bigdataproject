@@ -2,25 +2,26 @@
 Assignment 2 - COVID-19 Data Pipeline
 Step 3: Load PostgreSQL tables → BigQuery (covid_raw dataset)
 
-Requirements:
-    pip install google-cloud-bigquery pandas-gbq db-dtypes sqlalchemy psycopg2-binary
-
 Before running:
-    export GOOGLE_APPLICATION_CREDENTIALS="/Users/denzil/Desktop/big data project/keys/covid-bigquery-494113-097ddccca849.json"
+    1. Copy .env.example to .env and fill in GOOGLE_APPLICATION_CREDENTIALS
+    2. Set PGUSER / PGPASSWORD in .env if your Postgres setup requires it
 """
 
 import pandas as pd
 from sqlalchemy import create_engine, text
 from google.cloud import bigquery
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ── Config ─────────────────────────────────────────────────────
 DB_CONFIG = {
-    "host":     "localhost",
-    "port":     5432,
-    "database": "covid_db",
-    "user":     "denzil",
-    "password": ""
+    "host":     os.getenv("PGHOST", "localhost"),
+    "port":     int(os.getenv("PGPORT", 5432)),
+    "database": os.getenv("PGDATABASE", "covid_db"),
+    "user":     os.getenv("PGUSER", "postgres"),
+    "password": os.getenv("PGPASSWORD", ""),
 }
 
 GCP_PROJECT  = "covid-bigquery-494113"

@@ -50,7 +50,21 @@ python -c "from google.cloud import bigquery; c = bigquery.Client(); print('Conn
 ```
 Expected: `Connected: covid-bigquery-494113`.
 
-## 7. Verify the dbt connection
+## 7. Set up the dbt connection profile
+dbt needs a `profiles.yml` in your home directory to know how to connect to BigQuery.
+This file is **not in the repo** (it's machine-specific).
+
+```bash
+mkdir -p ~/.dbt
+cp dbt_covid/profiles.yml.example ~/.dbt/profiles.yml
+```
+
+Then edit `~/.dbt/profiles.yml` and set `keyfile` to the absolute path of your key:
+```yaml
+keyfile: /Users/yourname/Desktop/Big Data Project/keys/covid-bigquery-494113-xxxx.json
+```
+
+## 8. Verify the dbt connection
 ```bash
 cd dbt_covid
 dbt deps
@@ -58,7 +72,7 @@ dbt debug
 ```
 Expected: `All checks passed!`.
 
-## 8. (Optional) Load data into BigQuery Bronze
+## 9. (Optional) Load data into BigQuery Bronze
 The raw CSVs are gitignored (too large for GitHub). Download them fresh:
 ```bash
 python scripts/01_download_data.py
@@ -66,7 +80,7 @@ python scripts/03_postgres_to_bigquery.py
 ```
 This writes raw tables into `covid-bigquery-494113.bronze.*`.
 
-## 9. Run the full pipeline
+## 10. Run the full pipeline
 ```bash
 cd dbt_covid
 dbt build         # runs staging -> intermediate -> marts + all tests
